@@ -20,41 +20,37 @@ const docsMime = [
 
 const uploadFiles = async (req, res) => {
   let path = [];
-  try {
-    const files = req.files();
-    for await (const file of files) {
-      let folder;
-      const mime = file.mimetype.split("/").pop();
-      if (imageMime.includes(mime)) {
-        folder = "public/images/";
-      } else if (videoMime.includes(mime)) {
-        folder = "public/videos/";
-      } else if (docsMime.includes(mime)) {
-        folder = "public/";
-      } else {
-        folder = "public/";
-      }
-
-      const filePath =
-        `${folder}` +
-        Date.now() +
-        "_" +
-        file.filename
-          .replaceAll(" ", "_")
-          .replaceAll("'", "_")
-          .replaceAll("/", "_");
-
-      await fs.promises.mkdir(folder, { recursive: true });
-
-      path.push(await pump(file.file, fs.createWriteStream(filePath)).path);
+  const files = req.files();
+  for await (const file of files) {
+    let folder;
+    const mime = file.mimetype.split("/").pop();
+    if (imageMime.includes(mime)) {
+      folder = "public/images/";
+    } else if (videoMime.includes(mime)) {
+      folder = "public/videos/";
+    } else if (docsMime.includes(mime)) {
+      folder = "public/";
+    } else {
+      folder = "public/";
     }
-    return res.send({
-      status: true,
-      path: path,
-    });
-  } catch (error) {
-    ErrorHandler({ code: 500, message: error.message });
+
+    const filePath =
+      `${folder}` +
+      Date.now() +
+      "_" +
+      file.filename
+        .replaceAll(" ", "_")
+        .replaceAll("'", "_")
+        .replaceAll("/", "_");
+
+    await fs.promises.mkdir(folder, { recursive: true });
+
+    path.push(await pump(file.file, fs.createWriteStream(filePath)).path);
   }
+  return res.send({
+    status: true,
+    path: path,
+  });
 };
 
 const getFile = async (req, res) => {
@@ -105,36 +101,24 @@ const getFile = async (req, res) => {
     res.type("application/msword");
   }
 
-  try {
-    const filePath = await fs.readFileSync(publicPath);
-    return res.send({ status: true, data: filePath });
-  } catch (error) {
-    ErrorHandler({ code: 500, message: error.message });
-  }
+  const filePath = await fs.readFileSync(publicPath);
+  return res.send({ status: true, data: filePath });
 };
 
 const deleteFile = async (req, res) => {
-  try {
-    if (!req.query || !req.query.file_path) {
-      return res.send({
-        message: "file_path is required parameter",
-      });
-    }
+  if (!req.query || !req.query.file_path) {
+    return res.send({
+      message: "file_path is required parameter",
+    });
+  }
 
-    const currentFilePath = fileURLToPath(import.meta.url);
-    const currentDirPath = dirname(currentFilePath);
-    const publicPath = path.join(
-      currentDirPath,
-      "../../..",
-      req.query.file_path
-    );
+  const currentFilePath = fileURLToPath(import.meta.url);
+  const currentDirPath = dirname(currentFilePath);
+  const publicPath = path.join(currentDirPath, "../../..", req.query.file_path);
 
-    if (fs.existsSync(publicPath)) {
-      fs.unlinkSync(publicPath);
-      res.send({ status: true, message: "File deleted" });
-    }
-  } catch (error) {
-    ErrorHandler({ code: 500, message: error.message });
+  if (fs.existsSync(publicPath)) {
+    fs.unlinkSync(publicPath);
+    res.send({ status: true, message: "File deleted" });
   }
 };
 

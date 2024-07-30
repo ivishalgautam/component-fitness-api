@@ -7,48 +7,32 @@ import { ErrorHandler } from "../../helpers/handleError.js";
 const { BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND } = constants.http.status;
 
 const create = async (req, res) => {
-  try {
-    await table.LeadModel.create(req);
-    res.send({ status: true, message: "Query sent." });
-  } catch (error) {
-    ErrorHandler({ code: INTERNAL_SERVER_ERROR, message: error.message });
-  }
+  await table.LeadModel.create(req);
+  res.send({ status: true, message: "Query sent." });
 };
 
 const getById = async (req, res) => {
-  try {
-    const record = await table.LeadModel.getById(req, req.params.id);
+  const record = await table.LeadModel.getById(req, req.params.id);
 
-    if (!record) {
-      return ErrorHandler({ code: NOT_FOUND, message: "Query not found!" });
-    }
-
-    res.send({ status: true, data: record });
-  } catch (error) {
-    ErrorHandler({ code: INTERNAL_SERVER_ERROR, message: error.message });
+  if (!record) {
+    return ErrorHandler({ code: NOT_FOUND, message: "Query not found!" });
   }
+
+  res.send({ status: true, data: record });
 };
 
 const get = async (req, res) => {
-  try {
-    const queries = await table.LeadModel.get(req);
-    res.send({ status: true, data: queries });
-  } catch (error) {
-    ErrorHandler({ code: INTERNAL_SERVER_ERROR, message: error.message });
-  }
+  const queries = await table.LeadModel.get(req);
+  res.send({ status: true, data: queries });
 };
 
 const deleteById = async (req, res) => {
-  try {
-    const record = await table.LeadModel.getById(req, req.params.id);
-    if (!record)
-      return ErrorHandler({ code: NOT_FOUND, message: "Query not found!" });
+  const record = await table.LeadModel.getById(req, req.params.id);
+  if (!record)
+    return ErrorHandler({ code: NOT_FOUND, message: "Query not found!" });
 
-    await table.LeadModel.deleteById(req, req.params.id);
-    res.send({ status: true, message: "Query deleted." });
-  } catch (error) {
-    ErrorHandler({ code: INTERNAL_SERVER_ERROR, message: error.message });
-  }
+  await table.LeadModel.deleteById(req, req.params.id);
+  res.send({ status: true, message: "Query deleted." });
 };
 
 const convertToCustomer = async (req, res) => {
