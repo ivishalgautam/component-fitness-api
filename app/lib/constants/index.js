@@ -43,22 +43,31 @@ const constants = {
   },
   models: {
     USER_TABLE: "users",
-    PRODUCT_TABLE: "products",
-    CATEGORY_TABLE: "categories",
-    BRAND_TABLE: "brands",
-    ORDER_TABLE: "orders",
-    ORDER_ITEM_TABLE: "order_items",
-    ENQUIRY_TABLE: "enquiries",
-    ENQUIRY_ITEM_TABLE: "enquiry_items",
-    TEMP_CART_TABLE: "temp_carts",
-    QUERY_TABLE: "queries",
+    LEAD_TABLE: "leads",
     OTP_TABLE: "otps",
+    CUSTOMER_TABLE: "customers",
+    SALES_PERSON_TABLE: "sales_persons",
+    TRAINER_TABLE: "trainers",
+    MEMBERSHIP_TABLE: "memberships",
+    SUBSCRIPTION_FOR_TRAINER_TABLE: "subsription_for_trainers",
+    MEMBERSHIP_PERKS_TABLE: "membership_perks",
+    CUSTOMER_MEMBERSHIP_TABLE: "customer_memberships",
+    TRAINER_MEMBERSHIP_TABLE: "trainer_memberships",
+    OFFER_TABLE: "offers",
+    FEEDBACK_TABLE: "feedbacks",
+    CUSTOMER_FREEZE_MEMBERSHIP_TABLE: "freeze_memberships",
+    TASK_TABLE: "tasks",
+    NOTE_TABLE: "notes",
+    DOCUMENT_TABLE: "documents",
+    FOLLOW_UP_TABLE: "followups",
+    WORKOUT_PLAN_TABLE: "workout_plans",
+    DIET_PLAN_TABLE: "diet_plans",
   },
   bcrypt: {
     SALT_ROUNDS: 10,
   },
   time: {
-    TOKEN_EXPIRES_IN: 15 * 6000000, // 15 * 1 minute = 15 minutes
+    TOKEN_EXPIRES_IN: 15 * 60 * 1000, // 15 * 1 minute = 15 minutes
     REFRESH_TOKEN_EXPIRES_IN: "1d", // 1 day
   },
 };

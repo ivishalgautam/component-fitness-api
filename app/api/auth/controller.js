@@ -41,7 +41,7 @@ const verifyUserCredentials = async (req, res) => {
       token: jwtToken,
       expire_time: Date.now() + expiresIn,
       refresh_token: refreshToken,
-      user_data: userData,
+      user: userData,
     });
   } catch (error) {
     console.log(error);

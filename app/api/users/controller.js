@@ -7,64 +7,51 @@ import fs from "fs";
 import path from "path";
 import { sendCredentials } from "../../helpers/mailer.js";
 import { fileURLToPath } from "url";
-import authToken from "../../helpers/auth.js";
-import crypto from "crypto";
-import { sendOtp } from "../../helpers/interaktApi.js";
+import { ErrorHandler } from "../../helpers/handleError.js";
 
 const create = async (req, res) => {
   try {
     const record = await table.UserModel.getByUsername(req);
 
     if (record) {
-      return res.code(409).send({
-        status: false,
+      return ErrorHandler({
+        code: 409,
         message:
           "User already exists with username. Please try with different username",
       });
     }
 
-    const otp = crypto.randomInt(100000, 999999);
-    const data = await table.UserModel.create(req);
+    const newUser = await table.UserModel.create(req);
 
-    const userData = await table.UserModel.getById(req, data.dataValues.id);
-
-    const resp = await sendOtp({
-      country_code: userData?.country_code,
-      mobile_number: userData?.mobile_number,
-      first_name: userData?.first_name,
-      last_name: userData?.last_name,
-      otp,
-    });
-
-    if (resp.data.result) {
-      await table.OtpModel.create({
-        user_id: data.dataValues.id,
-        otp: otp,
-      });
+    if (newUser) {
+      req.body.user_id = newUser.id;
+    } else {
+      return ErrorHandler({ code: 500, message: "Error creating user!" });
     }
 
-    const [jwtToken, expiresIn] = authToken.generateAccessToken(userData);
-    const refreshToken = authToken.generateRefreshToken(userData);
+    if (newUser.role === "sales_person") {
+      await table.SalesPersonModel.create(req);
+    }
 
-    return res.send({
-      status: true,
-      token: jwtToken,
-      expire_time: Date.now() + expiresIn,
-      refresh_token: refreshToken,
-      user_data: userData,
-    });
+    if (newUser.role === "customer") {
+      await table.CustomerModel.create(req);
+    }
+
+    if (newUser.role === "trainer") {
+      // ! need trainer type in body
+      await table.TrainerModel.create(req);
+    }
+    res.send({ message: "User created" });
   } catch (error) {
-    console.error(error);
-    return res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 
 const update = async (req, res) => {
   try {
-    console.log(req.body);
     const record = await table.UserModel.getById(req);
     if (!record) {
-      return res.code(404).send({ status: false, message: "User not exists" });
+      return ErrorHandler({ code: 404, message: "User not exists" });
     }
 
     const user = await table.UserModel.update(req);
@@ -75,8 +62,7 @@ const update = async (req, res) => {
     }
     return res.send({ status: true, message: "Updated" });
   } catch (error) {
-    console.error(error);
-    return res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 
@@ -84,7 +70,7 @@ const updateStatus = async (req, res) => {
   try {
     const record = await table.UserModel.getById(req);
     if (!record) {
-      return res.code(404).send({ status: false, message: "User not exists" });
+      return ErrorHandler({ code: 404, message: "User not exists" });
     }
     const data = await table.UserModel.updateStatus(
       req.params.id,
@@ -119,8 +105,7 @@ const updateStatus = async (req, res) => {
       message: data?.is_active ? "Customer Active." : "Customer Inactive.",
     });
   } catch (error) {
-    console.error(error);
-    return res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 
@@ -128,22 +113,20 @@ const deleteById = async (req, res) => {
   try {
     const record = await table.UserModel.deleteById(req);
     if (record === 0) {
-      return res.code(404).send({ status: false, message: "User not exists" });
+      return ErrorHandler({ code: 404, message: "User not exists" });
     }
 
     return res.send({ status: true, data: record });
   } catch (error) {
-    console.error(error);
-    return res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 
 const get = async (req, res) => {
   try {
-    return res.send({ status: true, data: await table.UserModel.get() });
+    return res.send(await table.UserModel.get(req));
   } catch (error) {
-    console.error(error);
-    return res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 
@@ -151,14 +134,13 @@ const getById = async (req, res) => {
   try {
     const record = await table.UserModel.getById(req);
     if (!record) {
-      return res.code(404).send({ status: false, message: "User not exists" });
+      return ErrorHandler({ code: 404, message: "User not exists" });
     }
     delete record.password;
 
-    return res.send({ status: true, record });
+    return res.send({ status: true, data: record });
   } catch (error) {
-    console.error(error);
-    return res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 
@@ -167,7 +149,7 @@ const updatePassword = async (req, res) => {
     const record = await table.UserModel.getById(req);
 
     if (!record) {
-      return res.code(404).send({ status: false, message: "User not exists" });
+      return ErrorHandler({ code: 404, message: "User not exists" });
     }
 
     const verify_old_password = await hash.verify(
@@ -176,9 +158,10 @@ const updatePassword = async (req, res) => {
     );
 
     if (!verify_old_password) {
-      return res
-        .code(404)
-        .send({ message: "Incorrect password. Please enter a valid password" });
+      return ErrorHandler({
+        code: 400,
+        message: "Incorrect password. Please enter a valid password",
+      });
     }
 
     await table.UserModel.updatePassword(req);
@@ -187,8 +170,7 @@ const updatePassword = async (req, res) => {
       message: "Password changed successfully!",
     });
   } catch (error) {
-    console.error(error);
-    return res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 
@@ -196,17 +178,14 @@ const checkUsername = async (req, res) => {
   try {
     const user = await table.UserModel.getByUsername(req);
     if (user) {
-      return res.code(409).send({
-        status: false,
+      return ErrorHandler({
+        code: 409,
         message: "username already exists try with different username",
       });
     }
-    return res.send({
-      status: true,
-    });
+    return res.send({ status: true });
   } catch (error) {
-    console.error(error);
-    return res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 
@@ -219,8 +198,7 @@ const getUser = async (req, res) => {
 
     return res.send(req.user_data);
   } catch (error) {
-    console.error(error);
-    return res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 
@@ -237,8 +215,7 @@ const resetPassword = async (req, res) => {
       message: "Password reset successfully!",
     });
   } catch (error) {
-    console.error(error);
-    return res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 export default {

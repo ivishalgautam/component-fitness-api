@@ -24,10 +24,16 @@ const init = async (sequelize) => {
           key: "id",
           deferrable: Deferrable.INITIALLY_IMMEDIATE,
         },
+        validate: {
+          notEmpty: { msg: "user_id is required!" },
+        },
       },
       otp: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+          notEmpty: { msg: "Otp is required!" },
+        },
       },
     },
     {

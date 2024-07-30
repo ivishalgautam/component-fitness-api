@@ -21,42 +21,52 @@ const init = async (sequelize) => {
         type: sequelizeFwk.DataTypes.STRING,
         allowNull: false,
         unique: true,
+        validate: {
+          notEmpty: { msg: "Username is required!" },
+        },
       },
       email: {
         type: sequelizeFwk.DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: "",
       },
       mobile_number: {
         type: sequelizeFwk.DataTypes.STRING,
         allowNull: false,
+        validate: {
+          notEmpty: { msg: "Mobile number is required!" },
+        },
       },
-      country_code: {
+      fullname: {
         type: sequelizeFwk.DataTypes.STRING,
         allowNull: false,
-      },
-      first_name: {
-        type: sequelizeFwk.DataTypes.STRING,
-      },
-      last_name: {
-        type: sequelizeFwk.DataTypes.STRING,
+        validate: {
+          notEmpty: { msg: "Fullname is required!" },
+        },
       },
       password: {
         type: sequelizeFwk.DataTypes.STRING,
         allowNull: false,
+        validate: {
+          notEmpty: { msg: "Password is required!" },
+        },
       },
       is_active: {
         type: sequelizeFwk.DataTypes.BOOLEAN,
         defaultValue: false,
       },
       role: {
-        type: sequelizeFwk.DataTypes.ENUM({
-          values: ["admin", "user"],
-        }),
-        defaultValue: "user",
+        type: sequelizeFwk.DataTypes.ENUM(
+          "admin",
+          "sales_person",
+          "trainer",
+          "customer"
+        ),
+        defaultValue: "customer",
       },
-      is_verified: {
-        type: sequelizeFwk.DataTypes.BOOLEAN,
-        defaultValue: false,
+      avatar: {
+        type: sequelizeFwk.DataTypes.TEXT,
+        allowNull: true,
       },
       reset_password_token: {
         type: sequelizeFwk.DataTypes.STRING,
@@ -76,21 +86,24 @@ const init = async (sequelize) => {
 
 const create = async (req) => {
   const hash_password = hash.encrypt(req.body.password);
-  return await UserModel.create({
-    username: req.body.username,
-    password: hash_password,
-    first_name: req.body?.first_name,
-    last_name: req.body?.last_name,
-    email: req.body?.email,
-    mobile_number: req.body?.mobile_number,
-    country_code: req.body?.country_code.replace(/\s/g, ""),
-    role: req.body?.role,
-  });
+  return await UserModel.create(
+    {
+      username: req.body.username,
+      password: hash_password,
+      fullname: req.body?.fullname,
+      email: req.body?.email,
+      mobile_number: req.body?.mobile_number,
+      role: req.body?.role,
+      avatar: req.body?.avatar,
+    },
+    { returning: true, raw: true }
+  );
 };
 
-const get = async () => {
+const get = async (req) => {
+  const role = req.query?.role;
   return await UserModel.findAll({
-    where: { role: "user" },
+    where: { role: role && role !== "admin" ? role : { [Op.ne]: "admin" } },
     order: [["created_at", "DESC"]],
     attributes: {
       exclude: ["password", "reset_password_token", "confirmation_token"],
@@ -108,20 +121,17 @@ const getById = async (req, user_id) => {
       "id",
       "username",
       "email",
-      "first_name",
-      "last_name",
+      "fullname",
       "password",
       "is_active",
       "role",
       "mobile_number",
-      "country_code",
-      "is_verified",
+      "avatar",
     ],
   });
 };
 
 const getByUsername = async (req, record = undefined) => {
-  console.log(req.body);
   return await UserModel.findOne({
     where: {
       username: req?.body?.username || record?.user?.username,
@@ -130,14 +140,12 @@ const getByUsername = async (req, record = undefined) => {
       "id",
       "username",
       "email",
-      "first_name",
-      "last_name",
+      "fullname",
       "password",
       "is_active",
       "role",
       "mobile_number",
-      "country_code",
-      "is_verified",
+      "avatar",
     ],
   });
 };
@@ -146,13 +154,11 @@ const update = async (req) => {
   return await UserModel.update(
     {
       username: req.body?.username,
-      first_name: req.body?.first_name,
-      last_name: req.body?.last_name,
+      fullname: req.body?.fullname,
       email: req.body?.email,
       mobile_number: req.body?.mobile_number,
-      country_code: req.body?.country_code.replace(/\s/g, ""),
-
       role: req.body?.role,
+      avatar: req.body?.avatar,
     },
     {
       where: {
@@ -162,13 +168,11 @@ const update = async (req) => {
         "id",
         "username",
         "email",
-        "first_name",
-        "last_name",
+        "fullname",
         "is_active",
         "role",
         "mobile_number",
-        "country_code",
-        "is_verified",
+        "avatar",
       ],
       plain: true,
     }
@@ -263,31 +267,12 @@ const updateStatus = async (id, status) => {
         "id",
         "username",
         "email",
-        "first_name",
-        "last_name",
+        "fullname",
         "is_active",
         "role",
         "mobile_number",
-        "country_code",
-        "is_verified",
+        "avatar",
       ],
-      plain: true,
-      raw: true,
-    }
-  );
-
-  return rows;
-};
-
-const verify = async ({ user_id, status }) => {
-  const [rowCount, rows] = await UserModel.update(
-    {
-      is_verified: status,
-    },
-    {
-      where: {
-        id: user_id,
-      },
       plain: true,
       raw: true,
     }
@@ -307,7 +292,7 @@ const findUsersWithBirthdayToday = async () => {
           [Op.between]: [startIST, endIST],
         },
         role: {
-          [Op.in]: ["teacher", "student"],
+          [Op.in]: ["customer"],
         },
       },
     });
@@ -334,5 +319,4 @@ export default {
   getByUserIds: getByUserIds,
   findUsersWithBirthdayToday: findUsersWithBirthdayToday,
   updateStatus: updateStatus,
-  verify: verify,
 };

@@ -4,6 +4,7 @@ import pump from "pump";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import path, { dirname } from "path";
+import { ErrorHandler } from "../../helpers/handleError.js";
 
 const imageMime = ["jpeg", "jpg", "png", "gif", "webp"];
 const videoMime = ["mp4", "mpeg", "ogg", "webm", "m4v", "mov", "mkv"];
@@ -52,15 +53,14 @@ const uploadFiles = async (req, res) => {
       path: path,
     });
   } catch (error) {
-    console.log(error);
-    return res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 
 const getFile = async (req, res) => {
   if (!req.query || !req.query.file_path) {
-    return res.code(400).send({
-      status: false,
+    return ErrorHandler({
+      code: 400,
       message: "file_path is required parameter",
     });
   }
@@ -74,8 +74,7 @@ const getFile = async (req, res) => {
   );
 
   if (!fs.existsSync(publicPath)) {
-    console.log("file not found");
-    return res.code(404).send({ status: false, message: "file not found" });
+    return ErrorHandler({ code: 404, message: "file not found" });
   }
 
   let mime = req.query.file_path.split(".").pop();
@@ -110,7 +109,7 @@ const getFile = async (req, res) => {
     const filePath = await fs.readFileSync(publicPath);
     return res.send({ status: true, data: filePath });
   } catch (error) {
-    console.error({ error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 
@@ -129,14 +128,13 @@ const deleteFile = async (req, res) => {
       "../../..",
       req.query.file_path
     );
-    console.log({ publicPath });
+
     if (fs.existsSync(publicPath)) {
       fs.unlinkSync(publicPath);
       res.send({ status: true, message: "File deleted" });
     }
   } catch (error) {
-    console.error(error);
-    res.code(500).send({ status: false, error });
+    ErrorHandler({ code: 500, message: error.message });
   }
 };
 

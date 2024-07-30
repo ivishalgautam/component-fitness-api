@@ -2,7 +2,23 @@ import config from "./app/config/index.js";
 import server from "./server.js";
 import fastify from "fastify";
 
-const app = fastify({ logger: true });
+const envToLogger = {
+  development: {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        translateTime: "HH:MM:ss Z",
+        ignore: "pid,hostname",
+      },
+    },
+  },
+  production: true,
+  test: false,
+};
+
+const app = fastify({
+  logger: true,
+});
 
 try {
   server(app);
