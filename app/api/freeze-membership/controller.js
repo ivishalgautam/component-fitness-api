@@ -25,7 +25,7 @@ const update = async (req, res) => {
   if (!record) {
     return ErrorHandler({
       code: NOT_FOUND,
-      message: "Freeze time period not found!",
+      message: "Freeze time period not found!!",
     });
   }
 
