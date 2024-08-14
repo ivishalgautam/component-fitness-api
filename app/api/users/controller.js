@@ -38,7 +38,7 @@ const create = async (req, res) => {
     }
 
     if (newUser.role === "trainer") {
-      // ! need trainer type in body
+      // ! need trainer_type in body
       await table.TrainerModel.create(req);
     }
     res.send({ message: "User created" });
@@ -125,6 +125,17 @@ const deleteById = async (req, res) => {
 const get = async (req, res) => {
   try {
     return res.send(await table.UserModel.get(req));
+  } catch (error) {
+    ErrorHandler({ code: 500, message: error.message });
+  }
+};
+
+const getTrainers = async (req, res) => {
+  try {
+    return res.send({
+      status: true,
+      data: await table.UserModel.getTrainers(req),
+    });
   } catch (error) {
     ErrorHandler({ code: 500, message: error.message });
   }
@@ -229,4 +240,5 @@ export default {
   getUser: getUser,
   resetPassword: resetPassword,
   updateStatus: updateStatus,
+  getTrainers: getTrainers,
 };

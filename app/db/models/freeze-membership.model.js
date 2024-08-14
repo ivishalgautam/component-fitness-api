@@ -62,14 +62,20 @@ const create = async (req) => {
 };
 
 const update = async (req, id) => {
-  return await CustomerFreezeMembershipModel.update(
+  const [rowCount, rows] = await CustomerFreezeMembershipModel.update(
     {
       customer_membership_id: req.body.customer_membership_id,
       start_date: req.body.start_date,
       end_date: req.body.end_date,
     },
-    { where: { id: req.params.id || id } }
+    {
+      where: { id: req.params.id || id },
+      returning: true,
+      plain: true,
+      raw: true,
+    }
   );
+  return rows;
 };
 
 const get = async (req) => {
@@ -81,6 +87,16 @@ const getById = async (req, id) => {
     where: {
       id: req.params.id || id,
     },
+  });
+};
+
+const getLastFreezed = async (id) => {
+  return await CustomerFreezeMembershipModel.findOne({
+    where: {
+      customer_membership_id: id,
+    },
+    order: [["created_at", "DESC"]],
+    raw: true,
   });
 };
 
@@ -97,4 +113,5 @@ export default {
   get: get,
   getById: getById,
   deleteById: deleteById,
+  getLastFreezed: getLastFreezed,
 };

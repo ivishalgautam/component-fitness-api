@@ -1,6 +1,6 @@
 "use strict";
 import constants from "../../lib/constants/index.js";
-import sequelizeFwk from "sequelize";
+import sequelizeFwk, { QueryTypes } from "sequelize";
 const { DataTypes, Deferrable } = sequelizeFwk;
 
 let TrainerModel = null;
@@ -33,6 +33,14 @@ const init = async (sequelize) => {
         type: DataTypes.ENUM("personal", "general"),
         defaultValue: "general",
       },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        defaultValue: "",
+        // validate: {
+        //   notNull: { msg: "Description is required!" },
+        // },
+      },
     },
     {
       createdAt: "created_at",
@@ -46,7 +54,7 @@ const init = async (sequelize) => {
 const create = async (req) => {
   return await TrainerModel.create({
     user_id: req.body.user_id,
-    type: req.body.type,
+    type: req.body.trainer_type,
   });
 };
 
@@ -61,15 +69,33 @@ const update = async (req, id) => {
 };
 
 const get = async (req) => {
-  return await TrainerModel.findAll({
-    order: [["created_at", "DESC"]],
+  let whereQuery = "";
+  const type = req.query.type;
+  if (type) {
+    whereQuery = `WHERE trnr.type = '${type}'`;
+  }
+
+  let query = `
+  SELECT
+      trnr.id,
+      trnr.type,
+      usr.id as user_id,
+      usr.fullname,
+      usr.avatar
+    FROM ${constants.models.TRAINER_TABLE} trnr
+    LEFT JOIN ${constants.models.USER_TABLE} usr ON usr.id = trnr.user_id
+    ${whereQuery}
+  `;
+  return await TrainerModel.sequelize.query(query, {
+    type: QueryTypes.SELECT,
+    raw: true,
   });
 };
 
 const getById = async (req, id) => {
   return await TrainerModel.findOne({
     where: {
-      id: req.params.id || id,
+      id: req?.params?.id || id,
     },
   });
 };

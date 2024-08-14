@@ -1,22 +1,16 @@
 "use strict";
 import controller from "./controller.js";
-
-export const schema = {
-  body: {
-    type: "object",
-    properties: {
-      title: { type: "string" },
-      content: { type: "string" },
-      date: { type: "string" },
-    },
-    required: ["title", "content", "date"],
-  },
-};
+import { schema } from "./schema.js";
 
 export default async function routes(fastify, options) {
-  fastify.post("/", schema, controller.create);
-  fastify.delete("/:id", {}, controller.deleteById);
-  fastify.get("/:id", {}, controller.getById);
+  fastify.post("/", { schema: schema.post }, controller.create);
+  fastify.delete("/:id", { schema: schema.checkParams }, controller.deleteById);
+  fastify.get("/:id", { schema: schema.checkParams }, controller.getById);
+  fastify.get(
+    "/getByLeadId/:id",
+    { schema: schema.checkParams },
+    controller.getByLeadId
+  );
   fastify.get("/", {}, controller.get);
-  fastify.put("/:id", {}, controller.updateById);
+  fastify.put("/:id", { schema: schema.checkParams }, controller.updateById);
 }

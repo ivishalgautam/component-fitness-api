@@ -11,12 +11,11 @@ const create = async (req, res) => {
     await table.MembershipPerksModel.create(req);
   }
 
-  res.send({ message: "Membership perks created." });
+  res.send({ status: true, message: "Membership perks created." });
 };
 
 const getById = async (req, res) => {
   const record = await table.MembershipPerksModel.getById(req);
-
   if (!record) {
     return ErrorHandler({
       code: NOT_FOUND,
@@ -24,7 +23,7 @@ const getById = async (req, res) => {
     });
   }
 
-  res.send(record);
+  res.send({ status: true, data: record });
 };
 
 const update = async (req, res) => {
@@ -46,16 +45,16 @@ const update = async (req, res) => {
 
   await table.MembershipPerksModel.updateById(req);
 
-  res.send({ message: "Updated" });
+  res.send({ status: true, message: "Updated" });
 };
 
 const get = async (req, res) => {
   const data = await table.MembershipPerksModel.get(req);
-  res.send(data);
+  res.send({ status: true, data });
 };
 
 const deleteById = async (req, res) => {
-  const record = await table.MembershipPerksModel.getById(req, req.params.id);
+  const record = await table.MembershipPerksModel.getById(req);
 
   if (!record)
     return ErrorHandler({
@@ -63,8 +62,8 @@ const deleteById = async (req, res) => {
       message: "Membership perk not found!",
     });
 
-  await table.MembershipPerksModel.deleteById(req, req.params.id);
-  res.send({ message: "Membership perk deleted." });
+  await table.MembershipPerksModel.deleteById(req);
+  res.send({ status: true, message: "Membership perk deleted." });
 };
 
 export default {

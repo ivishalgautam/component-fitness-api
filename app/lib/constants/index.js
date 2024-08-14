@@ -67,7 +67,7 @@ const constants = {
     SALT_ROUNDS: 10,
   },
   time: {
-    TOKEN_EXPIRES_IN: 15 * 60 * 1000, // 15 * 1 minute = 15 minutes
+    TOKEN_EXPIRES_IN: 24 * 60 * 60 * 1000, // 15 * 1 minute = 15 minutes
     REFRESH_TOKEN_EXPIRES_IN: "1d", // 1 day
   },
 };

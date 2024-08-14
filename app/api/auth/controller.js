@@ -6,27 +6,27 @@ import table from "../../db/models.js";
 import authToken from "../../helpers/auth.js";
 import crypto from "crypto";
 import { sendOtp } from "../../helpers/interaktApi.js";
+import { ErrorHandler } from "../../helpers/handleError.js";
 
 const verifyUserCredentials = async (req, res) => {
   let userData;
   userData = await table.UserModel.getByUsername(req);
 
   if (!userData) {
-    return res.code(404).send({ message: "User not found!" });
+    return ErrorHandler({ code: 404, message: "User not found!" });
   }
 
   if (!userData.is_active) {
-    return res
-      .code(400)
-      .send({ message: "User not active. Please contact administrator!" });
+    return ErrorHandler({
+      code: 400,
+      message: "User not active. Please contact administrator!",
+    });
   }
 
   let passwordIsValid = await hash.verify(req.body.password, userData.password);
 
   if (!passwordIsValid) {
-    return res.code(400).send({
-      message: "Invalid credentials",
-    });
+    return ErrorHandler({ code: 400, message: "Invalid credentials" });
   }
 
   const [jwtToken, expiresIn] = authToken.generateAccessToken(userData);
@@ -46,8 +46,8 @@ const createNewUser = async (req, res) => {
   const record = await table.UserModel.getByUsername(req);
 
   if (record) {
-    return res.code(409).send({
-      status: false,
+    return ErrorHandler({
+      code: 409,
       message:
         "User already exists with username. Please try with different username",
     });

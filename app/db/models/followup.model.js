@@ -19,33 +19,33 @@ const init = async (sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          notNull: "Title is required!",
-          notEmpty: "Title is required!",
+          notNull: { msg: "Title is required!" },
+          notEmpty: { msg: "Title is required!" },
         },
       },
       content: {
         type: DataTypes.TEXT,
         allowNull: false,
         validate: {
-          notNull: "Content is required!",
-          notEmpty: "Content is required!",
+          notNull: { msg: "Content is required!" },
+          notEmpty: { msg: "Content is required!" },
         },
       },
       date: {
         type: DataTypes.DATE,
         allowNull: false,
         validate: {
-          isDate: "Please select valid date!",
-          notNull: "Please select valid date!",
-          notEmpty: "Please select valid date!",
+          isDate: { msg: "Please select valid date!" },
+          notNull: { msg: "Please select valid date!" },
+          notEmpty: { msg: "Please select valid date!" },
         },
       },
-      user_id: {
+      lead_id: {
         type: DataTypes.UUID,
         allowNull: false,
         onDelete: "CASCADE",
         references: {
-          model: constants.models.USER_TABLE,
+          model: constants.models.LEAD_TABLE,
           key: "id",
           deferrable: Deferrable.INITIALLY_IMMEDIATE,
         },
@@ -66,6 +66,10 @@ const init = async (sequelize) => {
           isUUID: 4,
         },
       },
+      is_completed: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
     },
     {
       createdAt: "created_at",
@@ -81,8 +85,8 @@ const create = async (req) => {
     title: req.body.title,
     content: req.body.content,
     date: req.body.date,
-    user_id: req.body.user_id,
-    sales_person_id: req.user_data.id,
+    lead_id: req.body.lead_id,
+    sales_person_id: req.body.sales_person_id,
   });
 };
 
@@ -92,6 +96,7 @@ const update = async (req, id) => {
       title: req.body.title,
       content: req.body.content,
       date: req.body.date,
+      is_completed: req.body.is_completed,
     },
     {
       where: {
@@ -106,7 +111,7 @@ const update = async (req, id) => {
 const get = async (req) => {
   let whereQuery = "";
   if (req.user_data.role === "customer") {
-    whereQuery = `fu.user_id = '${req.user_data.id}'`;
+    whereQuery = `fu.lead_id = '${req.user_data.id}'`;
   }
 
   let query = `
@@ -129,13 +134,24 @@ const getById = async (req, id) => {
   });
 };
 
-const getByUserId = async (req, user_id) => {
+const getByLeadId = async (req, id) => {
+  return await NoteModel.findAll({
+    where: { lead_id: req.params.id || id },
+    order: [["created_at", "DESC"]],
+    attributes: {
+      exclude: ["sales_person_id", "lead_id", "updated_at"],
+    },
+    raw: true,
+  });
+};
+
+const getByUserId = async (req, lead_id) => {
   let query = `
     SELECT
       *
       FROM followups fu
-      fu.sales_person_id = '${req.user_data.id}' AND fu.user_id = '${
-    req.params.id || user_id
+      fu.sales_person_id = '${req.user_data.id}' AND fu.lead_id = '${
+    req.params.id || lead_id
   }'
     `;
 
@@ -158,5 +174,6 @@ export default {
   getById: getById,
   getByUserId: getByUserId,
   deleteById: deleteById,
+  getByLeadId: getByLeadId,
   get: get,
 };

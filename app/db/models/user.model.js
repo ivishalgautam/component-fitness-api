@@ -102,12 +102,30 @@ const create = async (req) => {
 
 const get = async (req) => {
   const role = req.query?.role;
+
   return await UserModel.findAll({
-    where: { role: role && role !== "admin" ? role : { [Op.ne]: "admin" } },
+    where: {
+      id: {
+        [Op.ne]: req.user_data.id,
+      },
+      role: {
+        [Op.ne]: "admin",
+      },
+    },
     order: [["created_at", "DESC"]],
     attributes: {
       exclude: ["password", "reset_password_token", "confirmation_token"],
     },
+  });
+};
+
+const getTrainers = async (req) => {
+  return await UserModel.findAll({
+    where: {
+      role: "trainer",
+    },
+    order: [["created_at", "DESC"]],
+    attributes: ["id", "fullname"],
   });
 };
 
@@ -319,4 +337,5 @@ export default {
   getByUserIds: getByUserIds,
   findUsersWithBirthdayToday: findUsersWithBirthdayToday,
   updateStatus: updateStatus,
+  getTrainers: getTrainers,
 };

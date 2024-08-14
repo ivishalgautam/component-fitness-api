@@ -5,18 +5,13 @@ import { ErrorHandler } from "../../helpers/handleError.js";
 
 const { NOT_FOUND } = constants.http.status;
 
-const create = async (req, res) => {
-  await table.TrainerModel.create(req);
-  res.send({ status: true, message: "Trainer created." });
-};
-
 const getById = async (req, res) => {
-  const record = await table.TrainerModel.getById(req);
+  const record = await table.CustomerModel.getById(req);
 
   if (!record) {
     return ErrorHandler({
       code: NOT_FOUND,
-      message: "Trainer not found!",
+      message: "Customer not found!",
     });
   }
 
@@ -24,36 +19,35 @@ const getById = async (req, res) => {
 };
 
 const update = async (req, res) => {
-  const record = await table.TrainerModel.getById(req);
+  const record = await table.CustomerModel.getById(req);
   if (!record)
     return ErrorHandler({
       code: NOT_FOUND,
-      message: "Trainer not found!",
+      message: "Customer not found!",
     });
 
-  await table.TrainerModel.update(req);
+  await table.CustomerModel.update(req);
 };
 
 const get = async (req, res) => {
-  const data = await table.TrainerModel.get(req);
-  res.send({ status: true, data: data });
+  const customers = await table.CustomerModel.get(req);
+  res.send({ status: true, data: customers });
 };
 
 const deleteById = async (req, res) => {
-  const record = await table.TrainerModel.getById(req);
+  const record = await table.CustomerModel.getById(req);
 
   if (!record)
     return ErrorHandler({
       code: NOT_FOUND,
-      message: "Trainer not found!",
+      message: "Customer membership not found!",
     });
 
-  await table.TrainerModel.deleteById(req);
-  res.send({ status: true, message: "Trainer deleted." });
+  await table.CustomerModel.deleteById(req);
+  res.send({ status: true, message: "Customer membership deleted." });
 };
 
 export default {
-  create: create,
   get: get,
   deleteById: deleteById,
   getById: getById,

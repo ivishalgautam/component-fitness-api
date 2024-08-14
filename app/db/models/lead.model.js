@@ -28,25 +28,25 @@ const init = async (sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          isEmail: "Please enter valid email!",
-          notNull: "Email is required!",
-          notEmpty: "Email is required!",
+          isEmail: { msg: "Please enter valid email!" },
+          notNull: { msg: "Email is required!" },
+          notEmpty: { msg: "Email is required!" },
         },
       },
       mobile_number: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          notNull: "Mobile number is required!",
-          notEmpty: "Mobile number is required!",
+          notNull: { msg: "Mobile number is required!" },
+          notEmpty: { msg: "Mobile number is required!" },
         },
       },
       source: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          notNull: "Source is required!",
-          notEmpty: "Source is required!",
+          notNull: { msg: "Source is required!" },
+          notEmpty: { msg: "Source is required!" },
         },
       },
       sales_person_id: {
@@ -70,11 +70,15 @@ const init = async (sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          notNull: "Location is required!",
-          notEmpty: "Location is required!",
+          notNull: { msg: "Location is required!" },
+          notEmpty: { msg: "Location is required!" },
         },
       },
       is_verified: { type: DataTypes.BOOLEAN, defaultValue: false },
+      avatar: {
+        type: DataTypes.TEXT,
+        defaultValue: "",
+      },
     },
     {
       createdAt: "created_at",
@@ -122,7 +126,7 @@ const getById = async (req, id) => {
     where: {
       id: req.params.id || id,
     },
-    plain: true,
+    raw: true,
   });
 };
 

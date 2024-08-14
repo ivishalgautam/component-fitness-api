@@ -10,6 +10,7 @@ export default async function routes(fastify, options) {
   fastify.put("/status/:id", {}, controller.updateStatus);
   fastify.get("/me", {}, controller.getUser);
   fastify.get("/", {}, controller.get);
+  fastify.get("/get/trainers", {}, controller.getTrainers);
   fastify.get("/:id", {}, controller.getById);
   fastify.delete("/:id", {}, controller.deleteById);
 }

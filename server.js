@@ -25,6 +25,7 @@ export default (app) => {
     console.error(error);
     const statusCode = error.statusCode || 500;
     const errorMessage = error.message || "Internal Server Error";
+    console.log({ errorMessage });
     res.code(statusCode).send({
       status_code: statusCode,
       status: false,

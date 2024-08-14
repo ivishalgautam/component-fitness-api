@@ -54,7 +54,15 @@ const get = async (req) => {
 const getById = async (req, id) => {
   return await SalesPersonModel.findOne({
     where: {
-      id: req.params.id || id,
+      id: req?.params?.id || id,
+    },
+  });
+};
+
+const getByUserId = async (req, user_id) => {
+  return await SalesPersonModel.findOne({
+    where: {
+      user_id: req?.params?.id || user_id,
     },
   });
 };
@@ -70,5 +78,6 @@ export default {
   create: create,
   get: get,
   getById: getById,
+  getByUserId: getByUserId,
   deleteById: deleteById,
 };

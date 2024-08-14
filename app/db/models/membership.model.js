@@ -1,6 +1,6 @@
 "use strict";
 import constants from "../../lib/constants/index.js";
-import sequelizeFwk from "sequelize";
+import sequelizeFwk, { QueryTypes } from "sequelize";
 const { DataTypes } = sequelizeFwk;
 
 let MembershipModel = null;
@@ -59,20 +59,37 @@ const create = async (req) => {
     slug: req.body.slug,
     duration_in_months: req.body.duration_in_months,
     price: req.body.price,
+    perks: req.body.perks,
   });
 };
 
 const get = async (req) => {
-  return await MembershipModel.findAll({
-    order: [["created_at", "DESC"]],
+  let query = `
+  SELECT
+      mbrs.id,
+      mbrs.name,
+      mbrs.price,
+      mbrs.duration_in_months,
+      mbrs.created_at,
+      json_agg(mbrsprk.content) as perks
+    FROM ${constants.models.MEMBERSHIP_TABLE} mbrs
+    LEFT JOIN ${constants.models.MEMBERSHIP_PERKS_TABLE} mbrsprk ON mbrsprk.id = ANY(mbrs.perks)
+    GROUP BY
+      mbrs.id
+  `;
+
+  return await MembershipModel.sequelize.query(query, {
+    type: QueryTypes.SELECT,
+    raw: true,
   });
 };
 
 const getById = async (req, id) => {
   return await MembershipModel.findOne({
     where: {
-      id: req.params.id || id,
+      id: req?.params?.id || id,
     },
+    raw: true,
   });
 };
 

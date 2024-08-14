@@ -3,9 +3,9 @@ import controller from "./controller.js";
 import { schema } from "./schema.js";
 
 export default async function routes(fastify, options) {
-  fastify.post("/", { schema: schema.post }, controller.deleteById);
+  fastify.post("/", { schema: schema.post }, controller.create);
   fastify.post(
-    "/convertToCustomer",
+    "/convertToCustomer/:id",
     { schema: schema.convertToCustomer },
     controller.convertToCustomer
   );

@@ -3,6 +3,7 @@ import constants from "../../lib/constants/index.js";
 import table from "../../db/models.js";
 import slugify from "slugify";
 import { ErrorHandler } from "../../helpers/handleError.js";
+import moment from "moment";
 
 const { BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND } = constants.http.status;
 
@@ -44,26 +45,43 @@ const convertToCustomer = async (req, res) => {
     0,
     req.body.membership_id
   );
+
   if (!membershipRecord)
     return ErrorHandler({ code: NOT_FOUND, message: "Membership not found!" });
 
-  const trainerRecord = await table.TrainerModel.getById(
-    0,
-    req.body.trainer_id
-  );
-  if (!trainerRecord)
-    return ErrorHandler({ code: NOT_FOUND, message: "Trainer not found!" });
+  const startDate = moment().format();
+  const endDate = moment()
+    .add(membershipRecord.duration_in_months, "month")
+    .format();
 
-  if (leadRecord) {
-    req.body.fullname = leadRecord.fullname;
-    req.body.email = leadRecord.email;
-    req.body.mobile_number = leadRecord.mobile_number;
-    req.body.role = "customer";
+  req.body.start_date = startDate;
+  req.body.end_date = endDate;
+
+  if (req.body.trainer_type === "general") {
+    delete req.body.trainer_id;
+  }
+  if (req.body.trainer_type === "personal") {
+    const trainerRecord = await table.TrainerModel.getById(
+      0,
+      req.body.trainer_id
+    );
+    if (!trainerRecord)
+      return ErrorHandler({ code: NOT_FOUND, message: "Trainer not found!" });
   }
 
-  const user = await table.UserModel.create(newReq);
+  if (leadRecord) {
+    req.body.fullname = req.body.fullname ?? leadRecord.fullname;
+    req.body.email = req.body.email ?? leadRecord.email;
+    req.body.mobile_number = req.body.mobile_number ?? leadRecord.mobile_number;
+    req.body.role = "customer";
+    req.body.sales_person_id = leadRecord.sales_person_id ?? req.user_data.id;
+  }
+
+  const user = await table.UserModel.create(req);
   if (user) {
     req.body.user_id = user.id;
+    const customer = await table.CustomerModel.create(req);
+    req.body.customer_id = customer.id;
   } else {
     return ErrorHandler({ code: 500, message: "Error converting to customer" });
   }

@@ -4,8 +4,8 @@ import { schema } from "./schema.js";
 
 export default async function routes(fastify, options) {
   fastify.post("/", { schema: schema.post }, controller.create);
-  fastify.post(
-    "/:id",
+  fastify.put(
+    "/freezeMembership/:id",
     { schema: schema.freezeMembership },
     controller.freezeMembership
   );
@@ -16,6 +16,11 @@ export default async function routes(fastify, options) {
     controller.transferMembership
   );
   fastify.get("/:id", { schema: schema.checkParams }, controller.getById);
+  fastify.get(
+    "/getByCustomerId/:id",
+    { schema: schema.checkParams },
+    controller.getByCustomerId
+  );
   fastify.get("/", {}, controller.get);
   // fastify.delete("/:id", {}, controller.deleteById);
 }
